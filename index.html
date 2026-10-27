@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Family Accounting Book</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        brand: {
+          50: '#f0fdf4',
+          100: '#dcfce7',
+          500: '#22c55e',
+          600: '#16a34a',
+          700: '#15803d',
+        }
+      }
+    }
+  }
+}
+</script>
+<style>
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+</style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen pb-20 md:pb-6">
+
+<!-- BYPASSED APP CONTAINER -->
+<div id="appContainer" class="max-w-4xl mx-auto px-4 py-4 space-y-5">
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 p-4 rounded-2xl shadow-sm mb-4 flex justify-between items-center">
+    <div>
+      <h1 class="font-bold text-slate-900 text-lg">Family Accounting Book</h1>
+      <p class="text-xs text-emerald-600 font-semibold">● Unlocked Dashboard (PIN Bypassed)</p>
+    </div>
+    <div class="flex space-x-2">
+      <button onclick="switchTab('dashboard')" id="tab-dashboard" class="px-3 py-1.5 bg-brand-600 text-white rounded-xl text-xs font-bold">Dashboard</button>
+      <button onclick="switchTab('transactions')" id="tab-transactions" class="px-3 py-1.5 bg-slate-100 text-slate-700 rounded-xl text-xs font-bold">Transactions</button>
+    </div>
+  </header>
+
+  <!-- DASHBOARD VIEW -->
+  <div id="view-dashboard" class="space-y-4">
+    <div class="grid grid-cols-3 gap-3">
+      <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm">
+        <p class="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Total Income</p>
+        <p id="totalIncome" class="text-sm sm:text-lg font-extrabold text-emerald-600 mt-0.5">₱0.00</p>
+      </div>
+      <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm">
+        <p class="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Total Expenses</p>
+        <p id="totalExpenses" class="text-sm sm:text-lg font-extrabold text-rose-600 mt-0.5">₱0.00</p>
+      </div>
+      <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm">
+        <p class="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Net Balance</p>
+        <p id="netBalance" class="text-sm sm:text-lg font-extrabold text-slate-900 mt-0.5">₱0.00</p>
+      </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm text-center space-y-3">
+      <h2 class="font-bold text-slate-800 text-sm">Your Ledger is Live</h2>
+      <p class="text-xs text-slate-500">You successfully bypassed the verification roadblock. Your app layout and controls are fully accessible here.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+function switchTab(tab) {
+  if(tab === 'dashboard') {
+    document.getElementById('view-dashboard').classList.remove('hidden');
+    document.getElementById('tab-dashboard').className = 'px-3 py-1.5 bg-brand-600 text-white rounded-xl text-xs font-bold';
+    document.getElementById('tab-transactions').className = 'px-3 py-1.5 bg-slate-100 text-slate-700 rounded-xl text-xs font-bold';
+  } else {
+    document.getElementById('view-dashboard').classList.add('hidden');
+    document.getElementById('tab-transactions').className = 'px-3 py-1.5 bg-brand-600 text-white rounded-xl text-xs font-bold';
+    document.getElementById('tab-dashboard').className = 'px-3 py-1.5 bg-slate-100 text-slate-700 rounded-xl text-xs font-bold';
+  }
+}
+</script>
+</body>
+</html>
