@@ -142,7 +142,7 @@ tailwind.config = {
     </div>
   </div>
 
-  <!-- MOM COMPARISON VIEW -->
+  <!-- MoM COMPARISON VIEW -->
   <div id="view-mom" class="space-y-5 hidden">
     <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
       <h2 class="font-bold text-slate-800 text-base flex items-center gap-2">
@@ -330,8 +330,15 @@ let incomeSources = [
   "Joint (Investments)"
 ];
 
+// Persistent LocalStorage retrieval with default fallback demo entries if completely empty
 let savedTransactions = localStorage.getItem('family_accounting_transactions');
-let transactions = savedTransactions ? JSON.parse(savedTransactions) : [];
+let transactions = savedTransactions ? JSON.parse(savedTransactions) : [
+  { id: 1, date: '2026-09-15', month: '2026-09', desc: 'September Salary', type: 'Income', category: 'Salary', member: 'Darius', amount: 62000 },
+  { id: 2, date: '2026-09-18', month: '2026-09', desc: 'Groceries run', type: 'Expense', category: 'Groceries', member: 'Alice', amount: 900 },
+  { id: 3, date: '2026-10-02', month: '2026-10', desc: 'October Salary', type: 'Income', category: 'Salary', member: 'Darius', amount: 63000 },
+  { id: 4, date: '2026-10-05', month: '2026-10', desc: 'House rent', type: 'Expense', category: 'Housing', member: 'Darius', amount: 2450 }
+];
+localStorage.setItem('family_accounting_transactions', JSON.stringify(transactions));
 
 let historicalMonths = [
   { month: 'Nov 2025', income: 58000, expense: 46000 },
@@ -421,7 +428,11 @@ function updateMonthSelectors() {
     months.forEach(m => {
       dashSelect.innerHTML += `<option value="${m}">${m}</option>`;
     });
-    if (currentVal && months.includes(currentVal)) dashSelect.value = currentVal;
+    if (currentVal && months.includes(currentVal)) {
+      dashSelect.value = currentVal;
+    } else if (months.length > 0) {
+      dashSelect.value = months[0];
+    }
   }
 
   if (momA && momB) {
@@ -434,8 +445,8 @@ function updateMonthSelectors() {
       momB.innerHTML += `<option value="${m}">${m}</option>`;
     });
     if (months.length >= 2) {
-      if (!valA) momA.value = months[1];
-      if (!valB) momB.value = months[0];
+      if (!valA || !months.includes(valA)) momA.value = months[1];
+      if (!valB || !months.includes(valB)) momB.value = months[0];
     } else if (months.length === 1) {
       momA.value = months[0];
       momB.value = months[0];
