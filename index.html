@@ -306,7 +306,7 @@ tailwind.config = {
 </div>
 
 <script>
-let API_URL = 'https://script.google.com/macros/s/AKfycbwshuUput2ZE6gHgVIjJg-T9Rb-e1smq3fddO3Bag6plwCjTBs_rfN8BGjHlrT8KKrI_A/exec';
+let API_URL = 'https://script.google.com/macros/s/AKfycbwJL9v0tEZMJgWJMGhFdARogKChuWHaQllC1B_yPJavc-VjEEp9zKlIBbMDEpEG89YSrg/exec';
 
 let categories = {
   "Housing": 2500.00,
@@ -353,7 +353,6 @@ async function init() {
     let dateInput = document.getElementById('txDate');
     if (dateInput) dateInput.valueAsDate = new Date();
     
-    // Fetch live data from backend Google Sheet API
     await fetchBackendData();
 
     updateCategoryOptions();
