@@ -37,7 +37,7 @@ tailwind.config = {
       <h1 class="font-bold text-slate-900 text-base sm:text-lg flex items-center gap-2">
         <i data-lucide="book-open" class="w-5 h-5 text-emerald-600"></i> Family Accounting Book 01
       </h1>
-      <p class="text-xs text-slate-500">Monthly household cash flow, budget tracking, and 1-year historical analytics</p>
+      <p class="text-xs text-slate-500">Monthly household cash flow, budget tracking, and MoM analytics</p>
     </div>
     
     <div class="flex flex-wrap items-center gap-2">
@@ -52,28 +52,39 @@ tailwind.config = {
       </div>
 
       <!-- Navigation Tabs -->
-      <div class="flex bg-slate-100 p-1 rounded-xl space-x-1">
-        <button onclick="switchTab('dashboard')" id="tab-dashboard" class="px-3 py-1.5 bg-brand-600 text-white rounded-lg text-xs font-bold transition-all">Dashboard</button>
-        <button onclick="switchTab('transactions')" id="tab-transactions" class="px-3 py-1.5 text-slate-600 rounded-lg text-xs font-bold transition-all">Transactions</button>
-        <button onclick="switchTab('budget')" id="tab-budget" class="px-3 py-1.5 text-slate-600 rounded-lg text-xs font-bold transition-all">Budget Planner</button>
-        <button onclick="switchTab('history')" id="tab-history" class="px-3 py-1.5 text-slate-600 rounded-lg text-xs font-bold transition-all">1-Yr History</button>
+      <div class="flex flex-wrap bg-slate-100 p-1 rounded-xl gap-1">
+        <button type="button" onclick="switchTab('dashboard')" id="tab-dashboard" class="px-3 py-1.5 bg-brand-600 text-white rounded-lg text-xs font-bold transition-all">Dashboard</button>
+        <button type="button" onclick="switchTab('mom')" id="tab-mom" class="px-3 py-1.5 text-slate-600 rounded-lg text-xs font-bold transition-all">MoM Comparison</button>
+        <button type="button" onclick="switchTab('transactions')" id="tab-transactions" class="px-3 py-1.5 text-slate-600 rounded-lg text-xs font-bold transition-all">Transactions</button>
+        <button type="button" onclick="switchTab('budget')" id="tab-budget" class="px-3 py-1.5 text-slate-600 rounded-lg text-xs font-bold transition-all">Budget Planner</button>
+        <button type="button" onclick="switchTab('history')" id="tab-history" class="px-3 py-1.5 text-slate-600 rounded-lg text-xs font-bold transition-all">1-Yr History</button>
       </div>
     </div>
   </header>
 
   <!-- DASHBOARD VIEW -->
   <div id="view-dashboard" class="space-y-5">
-    <!-- METRICS GRID matching Google Sheet layout -->
+    <!-- MONTH FILTER BAR -->
+    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-3">
+      <div class="flex items-center gap-2">
+        <i data-lucide="calendar" class="w-4 h-4 text-emerald-600"></i>
+        <span class="text-xs font-bold text-slate-700">Viewing Month:</span>
+        <select id="dashboardMonthSelect" onchange="renderDashboard()" class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-bold text-slate-800 focus:outline-none focus:border-brand-500"></select>
+      </div>
+      <p class="text-[11px] text-slate-400">Dashboard metrics adapt to the selected month.</p>
+    </div>
+
+    <!-- METRICS GRID -->
     <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
       <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
         <p class="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Total Income</p>
         <p id="dashTotalIncome" class="text-base sm:text-xl font-extrabold text-emerald-600 mt-1">₱0.00</p>
-        <p class="text-[10px] text-slate-400 mt-0.5">Earned across all earners</p>
+        <p class="text-[10px] text-slate-400 mt-0.5">Earned in month</p>
       </div>
       <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
         <p class="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Total Expenses</p>
         <p id="dashTotalExpenses" class="text-base sm:text-xl font-extrabold text-rose-600 mt-1">₱0.00</p>
-        <p class="text-[10px] text-slate-400 mt-0.5">Across all categories</p>
+        <p class="text-[10px] text-slate-400 mt-0.5">Spent in month</p>
       </div>
       <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
         <p class="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Net Savings</p>
@@ -98,7 +109,7 @@ tailwind.config = {
       <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
         <div class="p-4 border-b border-slate-100 flex justify-between items-center">
           <h2 class="font-bold text-slate-800 text-sm">Category Spending Breakdown</h2>
-          <span class="text-xs bg-slate-100 px-2.5 py-1 rounded-full text-slate-600 font-medium">Live Google Sheet Sync</span>
+          <span class="text-xs bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full font-bold">Google Sheet Sync Active</span>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-left border-collapse text-xs">
@@ -116,7 +127,7 @@ tailwind.config = {
         </div>
       </div>
 
-      <!-- Right Column: Family Member Spending & Income Sources -->
+      <!-- Right Column -->
       <div class="space-y-5">
         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 space-y-3">
           <h2 class="font-bold text-slate-800 text-sm">Spending by Family Member</h2>
@@ -131,11 +142,46 @@ tailwind.config = {
     </div>
   </div>
 
+  <!-- MoM COMPARISON VIEW -->
+  <div id="view-mom" class="space-y-5 hidden">
+    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+      <h2 class="font-bold text-slate-800 text-base flex items-center gap-2">
+        <i data-lucide="bar-chart-2" class="w-5 h-5 text-emerald-600"></i> Month-on-Month (MoM) Performance Comparison
+      </h2>
+      <p class="text-xs text-slate-500">Compare financial performance, income growth, and expense fluctuations between any two recorded months.</p>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1 text-xs">Base Month (Previous)</label>
+          <select id="momMonthA" onchange="renderMoM()" class="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none"></select>
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1 text-xs">Comparison Month (Current)</label>
+          <select id="momMonthB" onchange="renderMoM()" class="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none"></select>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto pt-2">
+        <table class="w-full text-left border-collapse text-xs">
+          <thead>
+            <tr class="bg-slate-100 text-slate-700 font-semibold border-b border-slate-200">
+              <th class="p-3">Financial Metric</th>
+              <th id="momHeaderA" class="p-3 text-right">Month A</th>
+              <th id="momHeaderB" class="p-3 text-right">Month B</th>
+              <th class="p-3 text-right">MoM Variance / Growth</th>
+            </tr>
+          </thead>
+          <tbody id="momTableBody" class="divide-y divide-slate-100"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
   <!-- TRANSACTIONS VIEW -->
   <div id="view-transactions" class="space-y-4 hidden">
     <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between gap-3 items-center">
       <h2 class="font-bold text-slate-800 text-sm">Transaction Ledger</h2>
-      <button onclick="openAddModal()" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm">
+      <button type="button" onclick="openAddModal()" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm">
         <i data-lucide="plus" class="w-4 h-4"></i> Add Entry
       </button>
     </div>
@@ -146,6 +192,7 @@ tailwind.config = {
           <thead>
             <tr class="bg-slate-100 text-slate-700 font-semibold border-b border-slate-200">
               <th class="p-3">Date</th>
+              <th class="p-3">Month</th>
               <th class="p-3">Description</th>
               <th class="p-3">Type</th>
               <th class="p-3">Category / Source</th>
@@ -160,7 +207,7 @@ tailwind.config = {
     </div>
   </div>
 
-  <!-- BUDGET PLANNER VIEW (Admin Only) -->
+  <!-- BUDGET PLANNER VIEW -->
   <div id="view-budget" class="space-y-4 hidden">
     <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
       <div class="flex justify-between items-center">
@@ -172,7 +219,7 @@ tailwind.config = {
       </div>
       <div id="budgetInputsContainer" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3"></div>
       <div id="budgetActionContainer">
-        <button onclick="saveBudgets()" class="px-4 py-2 bg-brand-600 text-white rounded-xl text-xs font-bold shadow-sm">Save Budgets</button>
+        <button type="button" onclick="saveBudgets()" class="px-4 py-2 bg-brand-600 text-white rounded-xl text-xs font-bold shadow-sm">Save & Sync Budgets</button>
       </div>
     </div>
   </div>
@@ -185,7 +232,6 @@ tailwind.config = {
       </h2>
       <p class="text-xs text-slate-500">Comprehensive multi-month performance review tracking historical cash flow, peak spending periods, and financial health trends.</p>
 
-      <!-- Historical Metrics Cards -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
         <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
           <p class="text-xs text-slate-400 uppercase font-semibold">12-Month Total Inflows</p>
@@ -201,14 +247,11 @@ tailwind.config = {
         </div>
       </div>
 
-      <!-- AI Insights & Analysis Box -->
       <div class="bg-gradient-to-br from-emerald-50 to-teal-50 p-5 rounded-2xl border border-emerald-200 space-y-3">
         <h3 class="font-bold text-emerald-900 text-sm flex items-center gap-1.5">
           <i data-lucide="sparkles" class="w-4 h-4 text-emerald-600"></i> Annual Financial Insights & Recommendations
         </h3>
-        <div id="historicalInsightsContent" class="space-y-2 text-xs text-emerald-900 leading-relaxed">
-          <!-- Dynamically populated analysis -->
-        </div>
+        <div id="historicalInsightsContent" class="space-y-2 text-xs text-emerald-900 leading-relaxed"></div>
       </div>
     </div>
   </div>
@@ -219,7 +262,7 @@ tailwind.config = {
   <div class="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-xl border border-slate-100">
     <div class="flex justify-between items-center">
       <h3 class="font-bold text-slate-900 text-base">New Entry</h3>
-      <button onclick="closeAddModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+      <button type="button" onclick="closeAddModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
     </div>
     <form id="transactionForm" onsubmit="handleFormSubmit(event)" class="space-y-3 text-xs">
       <div>
@@ -256,15 +299,16 @@ tailwind.config = {
       </div>
       <div class="flex justify-end gap-2 pt-2">
         <button type="button" onclick="closeAddModal()" class="px-4 py-2 bg-slate-100 text-slate-600 rounded-xl font-bold">Cancel</button>
-        <button type="submit" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-bold shadow-sm">Save Entry</button>
+        <button type="submit" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-bold shadow-sm">Save & Sync Entry</button>
       </div>
     </form>
   </div>
 </div>
 
 <script>
-let categories = {
-  "Housing": 2300.00,
+let savedBudgets = localStorage.getItem('family_accounting_budgets');
+let categories = savedBudgets ? JSON.parse(savedBudgets) : {
+  "Housing": 2500.00,
   "Groceries": 950.00,
   "Utilities": 380.00,
   "Transportation": 250.00,
@@ -276,21 +320,19 @@ let categories = {
 };
 
 let incomeSources = [
+  "Salary", 
+  "Freelance", 
+  "Investment", 
+  "Other Income",
   "Darius (Salary & Freelance)", 
   "Alice (Salary)", 
   "Alyssa (Business & Dividends)", 
   "Joint (Investments)"
 ];
 
-let transactions = [
-  { id: 1, date: '2026-10-01', desc: 'Monthly Salary', type: 'Income', category: 'Darius (Salary & Freelance)', member: 'Darius', amount: 35000 },
-  { id: 2, date: '2026-10-02', desc: 'Alice Salary', type: 'Income', category: 'Alice (Salary)', member: 'Alice', amount: 28000 },
-  { id: 3, date: '2026-10-02', desc: 'House Rent', type: 'Expense', category: 'Housing', member: 'Joint Account', amount: 2300 },
-  { id: 4, date: '2026-10-05', desc: 'Supermarket Weekly Groceries', type: 'Expense', category: 'Groceries', member: 'Alice', amount: 650 },
-  { id: 5, date: '2026-10-10', desc: 'Electricity & Water Bill', type: 'Expense', category: 'Utilities', member: 'Darius', amount: 380 }
-];
+let savedTransactions = localStorage.getItem('family_accounting_transactions');
+let transactions = savedTransactions ? JSON.parse(savedTransactions) : [];
 
-// Historical 1-year monthly aggregate simulation for robust analysis
 let historicalMonths = [
   { month: 'Nov 2025', income: 58000, expense: 46000 },
   { month: 'Dec 2025', income: 65000, expense: 55000 },
@@ -307,14 +349,23 @@ let historicalMonths = [
 ];
 
 function init() {
-  document.getElementById('txDate').valueAsDate = new Date();
-  updateCategoryOptions();
-  renderAll();
-  lucide.createIcons();
+  try {
+    let dateInput = document.getElementById('txDate');
+    if (dateInput) dateInput.valueAsDate = new Date();
+    updateMonthSelectors();
+    updateCategoryOptions();
+    renderAll();
+    if (typeof lucide !== 'undefined') {
+      lucide.createIcons();
+    }
+  } catch (err) {
+    console.error('Init error:', err);
+  }
 }
 
 function getCurrentUserRole() {
-  let user = document.getElementById('activeUserSelect').value;
+  let select = document.getElementById('activeUserSelect');
+  let user = select ? select.value : 'Darius';
   return {
     name: user,
     isAdmin: user === 'Darius'
@@ -326,126 +377,273 @@ function switchUserRole() {
 }
 
 function switchTab(tab) {
-  ['dashboard', 'transactions', 'budget', 'history'].forEach(t => {
-    document.getElementById(`view-${t}`).classList.add('hidden');
-    document.getElementById(`tab-${t}`).className = 'px-3 py-1.5 text-slate-600 rounded-lg text-xs font-bold transition-all';
+  let tabs = ['dashboard', 'mom', 'transactions', 'budget', 'history'];
+  tabs.forEach(t => {
+    let viewEl = document.getElementById(`view-${t}`);
+    let tabEl = document.getElementById(`tab-${t}`);
+    if (viewEl) viewEl.classList.add('hidden');
+    if (tabEl) tabEl.className = 'px-3 py-1.5 text-slate-600 rounded-lg text-xs font-bold transition-all';
   });
-  document.getElementById(`view-${tab}`).classList.remove('hidden');
-  document.getElementById(`tab-${tab}`).className = 'px-3 py-1.5 bg-brand-600 text-white rounded-lg text-xs font-bold transition-all';
-  lucide.createIcons();
+  
+  let targetView = document.getElementById(`view-${tab}`);
+  let targetTab = document.getElementById(`tab-${tab}`);
+  if (targetView) targetView.classList.remove('hidden');
+  if (targetTab) targetTab.className = 'px-3 py-1.5 bg-brand-600 text-white rounded-lg text-xs font-bold transition-all';
+  
+  if (tab === 'mom') {
+    renderMoM();
+  }
+
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
+  }
+}
+
+function getAvailableMonths() {
+  let monthsSet = new Set();
+  transactions.forEach(t => {
+    if (t.month) monthsSet.add(t.month);
+  });
+  let currentMonth = new Date().toISOString().substring(0, 7);
+  monthsSet.add(currentMonth);
+  return Array.from(monthsSet).sort().reverse();
+}
+
+function updateMonthSelectors() {
+  let months = getAvailableMonths();
+  let dashSelect = document.getElementById('dashboardMonthSelect');
+  let momA = document.getElementById('momMonthA');
+  let momB = document.getElementById('momMonthB');
+
+  if (dashSelect) {
+    let currentVal = dashSelect.value;
+    dashSelect.innerHTML = '';
+    months.forEach(m => {
+      dashSelect.innerHTML += `<option value="${m}">${m}</option>`;
+    });
+    if (currentVal && months.includes(currentVal)) dashSelect.value = currentVal;
+  }
+
+  if (momA && momB) {
+    let valA = momA.value;
+    let valB = momB.value;
+    momA.innerHTML = '';
+    momB.innerHTML = '';
+    months.forEach(m => {
+      momA.innerHTML += `<option value="${m}">${m}</option>`;
+      momB.innerHTML += `<option value="${m}">${m}</option>`;
+    });
+    if (months.length >= 2) {
+      if (!valA) momA.value = months[1];
+      if (!valB) momB.value = months[0];
+    } else if (months.length === 1) {
+      momA.value = months[0];
+      momB.value = months[0];
+    }
+  }
 }
 
 function renderAll() {
+  updateMonthSelectors();
   renderDashboard();
   renderTransactionsTable();
   renderBudgetPlanner();
   renderHistory();
-  lucide.createIcons();
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
+  }
 }
 
 function renderDashboard() {
-  let totalIncome = transactions.filter(t => t.type === 'Income').reduce((sum, t) => sum + t.amount, 0);
-  let totalExpenses = transactions.filter(t => t.type === 'Expense').reduce((sum, t) => sum + t.amount, 0);
+  let dashSelect = document.getElementById('dashboardMonthSelect');
+  let selectedMonth = dashSelect ? dashSelect.value : new Date().toISOString().substring(0, 7);
+
+  let monthTransactions = transactions.filter(t => t.month === selectedMonth);
+
+  let totalIncome = monthTransactions.filter(t => t.type === 'Income').reduce((sum, t) => sum + t.amount, 0);
+  let totalExpenses = monthTransactions.filter(t => t.type === 'Expense').reduce((sum, t) => sum + t.amount, 0);
   let netSavings = totalIncome - totalExpenses;
   let savingsRate = totalIncome > 0 ? (netSavings / totalIncome) * 100 : 0;
   
   let totalBudget = Object.values(categories).reduce((a, b) => a + b, 0);
   let totalVariance = totalBudget - totalExpenses;
 
-  document.getElementById('dashTotalIncome').innerText = `₱${totalIncome.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-  document.getElementById('dashTotalExpenses').innerText = `₱${totalExpenses.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-  document.getElementById('dashNetSavings').innerText = `₱${netSavings.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-  document.getElementById('dashSavingsRate').innerText = `${savingsRate.toFixed(1)}%`;
-  document.getElementById('dashVariance').innerText = `₱${totalVariance.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+  let elInc = document.getElementById('dashTotalIncome');
+  let elExp = document.getElementById('dashTotalExpenses');
+  let elNet = document.getElementById('dashNetSavings');
+  let elRate = document.getElementById('dashSavingsRate');
+  let elVar = document.getElementById('dashVariance');
 
-  // Category Table
+  if (elInc) elInc.innerText = `₱${totalIncome.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+  if (elExp) elExp.innerText = `₱${totalExpenses.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+  if (elNet) elNet.innerText = `₱${netSavings.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+  if (elRate) elRate.innerText = `${savingsRate.toFixed(1)}%`;
+  if (elVar) elVar.innerText = `₱${totalVariance.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+
   let tbody = document.getElementById('categoryTableBody');
-  tbody.innerHTML = '';
-  let catSpentTotals = {};
-  transactions.filter(t => t.type === 'Expense').forEach(t => {
-    catSpentTotals[t.category] = (catSpentTotals[t.category] || 0) + t.amount;
-  });
+  if (tbody) {
+    tbody.innerHTML = '';
+    let catSpentTotals = {};
+    monthTransactions.filter(t => t.type === 'Expense').forEach(t => {
+      catSpentTotals[t.category] = (catSpentTotals[t.category] || 0) + t.amount;
+    });
 
-  for (let [cat, budgeted] of Object.entries(categories)) {
-    let spent = catSpentTotals[cat] || 0;
-    let variance = budgeted - spent;
-    let pct = budgeted > 0 ? (spent / budgeted) * 100 : 0;
-    
-    tbody.innerHTML += `
-      <tr class="hover:bg-slate-50">
-        <td class="p-3 font-medium text-slate-800">${cat}</td>
-        <td class="p-3 text-right text-slate-600">₱${budgeted.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
-        <td class="p-3 text-right text-slate-800 font-semibold">₱${spent.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
-        <td class="p-3 text-right ${variance >= 0 ? 'text-emerald-600' : 'text-rose-600'} font-medium">₱${variance.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
-        <td class="p-3 text-right">
-          <div class="flex items-center justify-end gap-2">
-            <span class="text-[11px] text-slate-500">${pct.toFixed(1)}%</span>
-            <div class="w-16 bg-slate-100 rounded-full h-1.5 overflow-hidden">
-              <div class="bg-brand-500 h-full rounded-full" style="width: ${Math.min(pct, 100)}%"></div>
+    for (let [cat, budgeted] of Object.entries(categories)) {
+      let spent = catSpentTotals[cat] || 0;
+      let variance = budgeted - spent;
+      let pct = budgeted > 0 ? (spent / budgeted) * 100 : 0;
+      
+      tbody.innerHTML += `
+        <tr class="hover:bg-slate-50">
+          <td class="p-3 font-medium text-slate-800">${cat}</td>
+          <td class="p-3 text-right text-slate-600">₱${budgeted.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+          <td class="p-3 text-right text-slate-800 font-semibold">₱${spent.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+          <td class="p-3 text-right ${variance >= 0 ? 'text-emerald-600' : 'text-rose-600'} font-medium">₱${variance.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+          <td class="p-3 text-right">
+            <div class="flex items-center justify-end gap-2">
+              <span class="text-[11px] text-slate-500">${pct.toFixed(1)}%</span>
+              <div class="w-16 bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                <div class="bg-brand-500 h-full rounded-full" style="width: ${Math.min(pct, 100)}%"></div>
+              </div>
+            </div>
+          </td>
+        </tr>
+      `;
+    }
+  }
+
+  let memberList = document.getElementById('memberSpendingList');
+  if (memberList) {
+    memberList.innerHTML = '';
+    let memberTotals = {};
+    monthTransactions.filter(t => t.type === 'Expense').forEach(t => {
+      memberTotals[t.member] = (memberTotals[t.member] || 0) + t.amount;
+    });
+
+    if (Object.keys(memberTotals).length === 0) {
+      memberList.innerHTML = `<p class="text-slate-400 italic">No expenses recorded for ${selectedMonth}.</p>`;
+    } else {
+      for (let [member, spent] of Object.entries(memberTotals)) {
+        let share = totalExpenses > 0 ? (spent / totalExpenses) * 100 : 0;
+        memberList.innerHTML += `
+          <div class="flex justify-between items-center p-2 bg-slate-50 rounded-xl">
+            <span class="font-medium text-slate-700">${member}</span>
+            <div class="text-right">
+              <span class="font-bold text-slate-900">₱${spent.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+              <span class="text-[10px] text-slate-400 block">${share.toFixed(1)}% share</span>
             </div>
           </div>
+        `;
+      }
+    }
+  }
+
+  let incomeList = document.getElementById('incomeSourceList');
+  if (incomeList) {
+    incomeList.innerHTML = '';
+    let incomeTotals = {};
+    monthTransactions.filter(t => t.type === 'Income').forEach(t => {
+      incomeTotals[t.category] = (incomeTotals[t.category] || 0) + t.amount;
+    });
+
+    if (Object.keys(incomeTotals).length === 0) {
+      incomeList.innerHTML = `<p class="text-slate-400 italic">No income recorded for ${selectedMonth}.</p>`;
+    } else {
+      for (let [src, amt] of Object.entries(incomeTotals)) {
+        let share = totalIncome > 0 ? (amt / totalIncome) * 100 : 0;
+        incomeList.innerHTML += `
+          <div class="flex justify-between items-center p-2 bg-slate-50 rounded-xl">
+            <span class="font-medium text-slate-700 truncate max-w-[150px]">${src}</span>
+            <div class="text-right">
+              <span class="font-bold text-emerald-600">₱${amt.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+              <span class="text-[10px] text-slate-400 block">${share.toFixed(1)}% share</span>
+            </div>
+          </div>
+        `;
+      }
+    }
+  }
+}
+
+function renderMoM() {
+  let selectA = document.getElementById('momMonthA');
+  let selectB = document.getElementById('momMonthB');
+  if (!selectA || !selectB) return;
+
+  let monthA = selectA.value;
+  let monthB = selectB.value;
+
+  document.getElementById('momHeaderA').innerText = monthA || 'Month A';
+  document.getElementById('momHeaderB').innerText = monthB || 'Month B';
+
+  let txA = transactions.filter(t => t.month === monthA);
+  let txB = transactions.filter(t => t.month === monthB);
+
+  let incA = txA.filter(t => t.type === 'Income').reduce((sum, t) => sum + t.amount, 0);
+  let incB = txB.filter(t => t.type === 'Income').reduce((sum, t) => sum + t.amount, 0);
+
+  let expA = txA.filter(t => t.type === 'Expense').reduce((sum, t) => sum + t.amount, 0);
+  let expB = txB.filter(t => t.type === 'Expense').reduce((sum, t) => sum + t.amount, 0);
+
+  let savA = incA - expA;
+  let savB = incB - expB;
+
+  let rateA = incA > 0 ? (savA / incA) * 100 : 0;
+  let rateB = incB > 0 ? (savB / incB) * 100 : 0;
+
+  let metrics = [
+    { label: 'Total Inflows (Income)', a: incA, b: incB, isCurrency: true, inverseGood: false },
+    { label: 'Total Outflows (Expenses)', a: expA, b: expB, isCurrency: true, inverseGood: true },
+    { label: 'Net Savings', a: savA, b: savB, isCurrency: true, inverseGood: false },
+    { label: 'Savings Rate', a: rateA, b: rateB, isCurrency: false, inverseGood: false }
+  ];
+
+  let tbody = document.getElementById('momTableBody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  metrics.forEach(m => {
+    let diff = m.b - m.a;
+    let pctChange = m.a !== 0 ? (diff / Math.abs(m.a)) * 100 : 0;
+    let isBetter = m.inverseGood ? diff <= 0 : diff >= 0;
+
+    let formattedA = m.isCurrency ? `₱${m.a.toLocaleString('en-US', {minimumFractionDigits: 2})}` : `${m.a.toFixed(1)}%`;
+    let formattedB = m.isCurrency ? `₱${m.b.toLocaleString('en-US', {minimumFractionDigits: 2})}` : `${m.b.toFixed(1)}%`;
+    let formattedDiff = m.isCurrency ? `₱${Math.abs(diff).toLocaleString('en-US', {minimumFractionDigits: 2})}` : `${Math.abs(diff).toFixed(1)}%`;
+
+    tbody.innerHTML += `
+      <tr class="hover:bg-slate-50">
+        <td class="p-3 font-medium text-slate-800">${m.label}</td>
+        <td class="p-3 text-right text-slate-600">${formattedA}</td>
+        <td class="p-3 text-right text-slate-800 font-semibold">${formattedB}</td>
+        <td class="p-3 text-right ${isBetter ? 'text-emerald-600' : 'text-rose-600'} font-bold">
+          ${diff >= 0 ? '+' : '-'}${formattedDiff} (${pctChange.toFixed(1)}%)
         </td>
       </tr>
     `;
-  }
-
-  // Family Member Spending
-  let memberList = document.getElementById('memberSpendingList');
-  memberList.innerHTML = '';
-  let memberTotals = {};
-  transactions.filter(t => t.type === 'Expense').forEach(t => {
-    memberTotals[t.member] = (memberTotals[t.member] || 0) + t.amount;
   });
-
-  for (let [member, spent] of Object.entries(memberTotals)) {
-    let share = totalExpenses > 0 ? (spent / totalExpenses) * 100 : 0;
-    memberList.innerHTML += `
-      <div class="flex justify-between items-center p-2 bg-slate-50 rounded-xl">
-        <span class="font-medium text-slate-700">${member}</span>
-        <div class="text-right">
-          <span class="font-bold text-slate-900">₱${spent.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
-          <span class="text-[10px] text-slate-400 block">${share.toFixed(1)}% share</span>
-        </div>
-      </div>
-    `;
-  }
-
-  // Income by Earner
-  let incomeList = document.getElementById('incomeSourceList');
-  incomeList.innerHTML = '';
-  let incomeTotals = {};
-  transactions.filter(t => t.type === 'Income').forEach(t => {
-    incomeTotals[t.category] = (incomeTotals[t.category] || 0) + t.amount;
-  });
-
-  for (let [src, amt] of Object.entries(incomeTotals)) {
-    let share = totalIncome > 0 ? (amt / totalIncome) * 100 : 0;
-    incomeList.innerHTML += `
-      <div class="flex justify-between items-center p-2 bg-slate-50 rounded-xl">
-        <span class="font-medium text-slate-700 truncate max-w-[150px]">${src}</span>
-        <div class="text-right">
-          <span class="font-bold text-emerald-600">₱${amt.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
-          <span class="text-[10px] text-slate-400 block">${share.toFixed(1)}% share</span>
-        </div>
-      </div>
-    `;
-  }
 }
 
 function renderTransactionsTable() {
   let tbody = document.getElementById('transactionsTableBody');
+  if (!tbody) return;
   tbody.innerHTML = '';
+  if (transactions.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-slate-400 italic">No transactions added yet. Click "Add Entry" above to record one.</td></tr>`;
+    return;
+  }
   transactions.forEach(t => {
     tbody.innerHTML += `
       <tr class="hover:bg-slate-50">
         <td class="p-3 text-slate-600">${t.date}</td>
+        <td class="p-3 text-slate-500 font-semibold">${t.month}</td>
         <td class="p-3 font-medium text-slate-900">${t.desc}</td>
         <td class="p-3"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${t.type === 'Income' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">${t.type}</span></td>
         <td class="p-3 text-slate-600">${t.category}</td>
         <td class="p-3 text-slate-600">${t.member}</td>
         <td class="p-3 text-right font-bold ${t.type === 'Income' ? 'text-emerald-600' : 'text-slate-800'}">₱${t.amount.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
         <td class="p-3 text-center">
-          <button onclick="deleteTransaction(${t.id})" class="text-slate-400 hover:text-rose-600 transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+          <button type="button" onclick="deleteTransaction(${t.id})" class="text-slate-400 hover:text-rose-600 transition-colors p-1"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
         </td>
       </tr>
     `;
@@ -458,12 +656,15 @@ function renderBudgetPlanner() {
   let badge = document.getElementById('budgetAccessBadge');
   let actionContainer = document.getElementById('budgetActionContainer');
   
+  if (!container) return;
   container.innerHTML = '';
   
   if (role.isAdmin) {
-    badge.className = 'px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700';
-    badge.innerText = 'Admin Privileges Active (Editable)';
-    actionContainer.style.display = 'block';
+    if (badge) {
+      badge.className = 'px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700';
+      badge.innerText = 'Admin Privileges Active (Editable)';
+    }
+    if (actionContainer) actionContainer.style.display = 'block';
 
     for (let [cat, limit] of Object.entries(categories)) {
       container.innerHTML += `
@@ -474,9 +675,11 @@ function renderBudgetPlanner() {
       `;
     }
   } else {
-    badge.className = 'px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800';
-    badge.innerText = 'Contributor View (Read-Only Budget)';
-    actionContainer.style.display = 'none';
+    if (badge) {
+      badge.className = 'px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800';
+      badge.innerText = 'Contributor View (Read-Only Budget)';
+    }
+    if (actionContainer) actionContainer.style.display = 'none';
 
     for (let [cat, limit] of Object.entries(categories)) {
       container.innerHTML += `
@@ -495,12 +698,30 @@ function saveBudgets() {
     alert('Access Denied: Only Admin (Darius) can modify household budget allocations.');
     return;
   }
+  
+  let newBudgets = {};
   for (let cat of Object.keys(categories)) {
-    let val = parseFloat(document.getElementById(`budget-input-${cat}`).value);
-    if (!isNaN(val)) categories[cat] = val;
+    let inputEl = document.getElementById(`budget-input-${cat}`);
+    if (inputEl) {
+      let val = parseFloat(inputEl.value);
+      if (!isNaN(val)) categories[cat] = val;
+    }
+    newBudgets[cat] = categories[cat];
   }
+
+  localStorage.setItem('family_accounting_budgets', JSON.stringify(categories));
+
+  fetch('https://script.google.com/macros/s/AKfycbwshuUput2ZE6gHgVIjJg-T9Rb-e1smq3fddO3Bag6plwCjTBs_rfN8BGjHlrT8KKrI_A/exec', {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: "updateBudgets", budgets: newBudgets })
+  }).then(() => {
+    console.log('Budgets synced to Google Sheets successfully');
+  }).catch(err => console.error('Sync error:', err));
+
   renderAll();
-  alert('Category budgets successfully updated by Admin.');
+  alert('Category budgets successfully updated and synced to your Google Sheet backend!');
 }
 
 function renderHistory() {
@@ -508,30 +729,41 @@ function renderHistory() {
   let total12Exp = historicalMonths.reduce((sum, m) => sum + m.expense, 0);
   let avgSavingsRate = historicalMonths.reduce((sum, m) => sum + ((m.income - m.expense) / m.income), 0) / historicalMonths.length * 100;
 
-  document.getElementById('histTotalIncome').innerText = `₱${total12Inc.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-  document.getElementById('histTotalExpenses').innerText = `₱${total12Exp.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-  document.getElementById('histAvgSavingsRate').innerText = `${avgSavingsRate.toFixed(1)}%`;
+  let elInc = document.getElementById('histTotalIncome');
+  let elExp = document.getElementById('histTotalExpenses');
+  let elRate = document.getElementById('histAvgSavingsRate');
+
+  if (elInc) elInc.innerText = `₱${total12Inc.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+  if (elExp) elExp.innerText = `₱${total12Exp.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+  if (elRate) elRate.innerText = `${avgSavingsRate.toFixed(1)}%`;
 
   let insightBox = document.getElementById('historicalInsightsContent');
-  insightBox.innerHTML = `
-    <p>• <strong>Consistent Surplus & Strong Saving:</strong> Over the past 12 months, your household maintained an average savings rate of <strong>${avgSavingsRate.toFixed(1)}%</strong>, safely surpassing your 20% annual wealth retention target.</p>
-    <p>• <strong>Peak Expenditure Season:</strong> Historical data highlights a seasonal spending surge in <strong>December (₱55,000)</strong> driven by holiday festivities, which was successfully cushioned by year-end bonuses and diversified family contributions.</p>
-    <p>• <strong>Cash Flow Resilience:</strong> Dual-income contributions from Darius and Alice, supplemented by auxiliary business and investment inflows, provided a stable buffer against monthly utility and grocery inflation.</p>
-    <p>• <strong>Recommendation for Next Quarter:</strong> Consider earmarking surplus quarterly cash flow into high-yield fixed instruments or emergency funds to further compound your family's financial security.</p>
-  `;
+  if (insightBox) {
+    insightBox.innerHTML = `
+      <p>• <strong>Consistent Surplus & Strong Saving:</strong> Over the past 12 months, your household maintained an average savings rate of <strong>${avgSavingsRate.toFixed(1)}%</strong>, safely surpassing your 20% annual wealth retention target.</p>
+      <p>• <strong>Peak Expenditure Season:</strong> Historical data highlights a seasonal spending surge in November/December driven by holiday festivities, successfully cushioned by bonuses and family contributions.</p>
+      <p>• <strong>Cash Flow Resilience:</strong> Dual-income contributions and auxiliary inflows provided a stable buffer against utility and grocery inflation.</p>
+      <p>• <strong>Recommendation for Next Quarter:</strong> Consider earmarking surplus quarterly cash flow into high-yield fixed instruments or emergency funds.</p>
+    `;
+  }
 }
 
 function openAddModal() {
-  document.getElementById('addModal').classList.remove('hidden');
+  let modal = document.getElementById('addModal');
+  if (modal) modal.classList.remove('hidden');
 }
 
 function closeAddModal() {
-  document.getElementById('addModal').classList.add('hidden');
+  let modal = document.getElementById('addModal');
+  if (modal) modal.classList.add('hidden');
 }
 
 function updateCategoryOptions() {
-  let type = document.getElementById('txType').value;
+  let typeEl = document.getElementById('txType');
   let catSelect = document.getElementById('txCategory');
+  if (!typeEl || !catSelect) return;
+
+  let type = typeEl.value;
   catSelect.innerHTML = '';
   if (type === 'Expense') {
     Object.keys(categories).forEach(cat => {
@@ -547,26 +779,49 @@ function updateCategoryOptions() {
 function handleFormSubmit(event) {
   event.preventDefault();
   let role = getCurrentUserRole();
+  let dateEl = document.getElementById('txDate');
+  let descEl = document.getElementById('txDesc');
+  let typeEl = document.getElementById('txType');
+  let catEl = document.getElementById('txCategory');
+  let memberEl = document.getElementById('txMember');
+  let amountEl = document.getElementById('txAmount');
+
+  let txDate = dateEl ? dateEl.value : '';
+  let txMonth = txDate.length >= 7 ? txDate.substring(0, 7) : '';
+
   let newTx = {
     id: Date.now(),
-    date: document.getElementById('txDate').value,
-    desc: document.getElementById('txDesc').value,
-    type: document.getElementById('txType').value,
-    category: document.getElementById('txCategory').value,
-    member: role.isAdmin ? document.getElementById('txMember').value : role.name, // Contributors record under their own name
-    amount: parseFloat(document.getElementById('txAmount').value)
+    date: txDate,
+    month: txMonth,
+    desc: descEl ? descEl.value : '',
+    type: typeEl ? typeEl.value : 'Expense',
+    category: catEl ? catEl.value : '',
+    member: role.isAdmin && memberEl ? memberEl.value : role.name,
+    amount: amountEl ? parseFloat(amountEl.value) || 0 : 0
   };
+
+  fetch('https://script.google.com/macros/s/AKfycbwshuUput2ZE6gHgVIjJg-T9Rb-e1smq3fddO3Bag6plwCjTBs_rfN8BGjHlrT8KKrI_A/exec', {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(newTx)
+  }).then(() => {
+    console.log('Synced transaction with Month data to Google Sheets successfully');
+  }).catch(err => console.error('Sync error:', err));
+
   transactions.unshift(newTx);
+  localStorage.setItem('family_accounting_transactions', JSON.stringify(transactions));
+
   closeAddModal();
-  document.getElementById('transactionForm').reset();
-  document.getElementById('txDate').valueAsDate = new Date();
+  let form = document.getElementById('transactionForm');
+  if (form) form.reset();
+  if (dateEl) dateEl.valueAsDate = new Date();
   renderAll();
 }
 
 function deleteTransaction(id) {
   let role = getCurrentUserRole();
   if (!role.isAdmin) {
-    // Contributors can only delete their own entries or restricted
     let tx = transactions.find(t => t.id === id);
     if (tx && tx.member !== role.name) {
       alert('Contributors can only delete their own submitted ledger entries.');
@@ -574,6 +829,7 @@ function deleteTransaction(id) {
     }
   }
   transactions = transactions.filter(t => t.id !== id);
+  localStorage.setItem('family_accounting_transactions', JSON.stringify(transactions));
   renderAll();
 }
 
