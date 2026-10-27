@@ -71,7 +71,7 @@ tailwind.config = {
         <span class="text-xs font-bold text-slate-700">Viewing Month:</span>
         <select id="dashboardMonthSelect" onchange="renderDashboard()" class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-bold text-slate-800 focus:outline-none focus:border-brand-500"></select>
       </div>
-      <p class="text-[11px] text-slate-400">Dashboard metrics adapt to the selected month.</p>
+      <p class="text-[11px] text-slate-400">Dashboard metrics read directly from Google Sheet backend.</p>
     </div>
 
     <!-- METRICS GRID -->
@@ -109,7 +109,7 @@ tailwind.config = {
       <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
         <div class="p-4 border-b border-slate-100 flex justify-between items-center">
           <h2 class="font-bold text-slate-800 text-sm">Category Spending Breakdown</h2>
-          <span class="text-xs bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full font-bold">Google Sheet Sync Active</span>
+          <span class="text-xs bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full font-bold">Google Sheet Backend Active</span>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-left border-collapse text-xs">
@@ -148,7 +148,7 @@ tailwind.config = {
       <h2 class="font-bold text-slate-800 text-base flex items-center gap-2">
         <i data-lucide="bar-chart-2" class="w-5 h-5 text-emerald-600"></i> Month-on-Month (MoM) Performance Comparison
       </h2>
-      <p class="text-xs text-slate-500">Compare financial performance, income growth, and expense fluctuations between any two recorded months.</p>
+      <p class="text-xs text-slate-500">Compare financial performance and income growth between recorded backend months.</p>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
         <div>
@@ -180,7 +180,7 @@ tailwind.config = {
   <!-- TRANSACTIONS VIEW -->
   <div id="view-transactions" class="space-y-4 hidden">
     <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between gap-3 items-center">
-      <h2 class="font-bold text-slate-800 text-sm">Transaction Ledger</h2>
+      <h2 class="font-bold text-slate-800 text-sm">Transaction Ledger (Backend Data)</h2>
       <button type="button" onclick="openAddModal()" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm">
         <i data-lucide="plus" class="w-4 h-4"></i> Add Entry
       </button>
@@ -230,7 +230,7 @@ tailwind.config = {
       <h2 class="font-bold text-slate-800 text-base flex items-center gap-2">
         <i data-lucide="trending-up" class="w-5 h-5 text-emerald-600"></i> 1-Year Historical Summary & Financial Analysis
       </h2>
-      <p class="text-xs text-slate-500">Comprehensive multi-month performance review tracking historical cash flow, peak spending periods, and financial health trends.</p>
+      <p class="text-xs text-slate-500">Comprehensive multi-month performance review tracking historical cash flow.</p>
 
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
         <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
@@ -306,8 +306,9 @@ tailwind.config = {
 </div>
 
 <script>
-let savedBudgets = localStorage.getItem('family_accounting_budgets');
-let categories = savedBudgets ? JSON.parse(savedBudgets) : {
+let API_URL = 'https://script.google.com/macros/s/AKfycbwshuUput2ZE6gHgVIjJg-T9Rb-e1smq3fddO3Bag6plwCjTBs_rfN8BGjHlrT8KKrI_A/exec';
+
+let categories = {
   "Housing": 2500.00,
   "Groceries": 950.00,
   "Utilities": 380.00,
@@ -330,15 +331,7 @@ let incomeSources = [
   "Joint (Investments)"
 ];
 
-// Persistent LocalStorage retrieval with default fallback demo entries if completely empty
-let savedTransactions = localStorage.getItem('family_accounting_transactions');
-let transactions = savedTransactions ? JSON.parse(savedTransactions) : [
-  { id: 1, date: '2026-09-15', month: '2026-09', desc: 'September Salary', type: 'Income', category: 'Salary', member: 'Darius', amount: 62000 },
-  { id: 2, date: '2026-09-18', month: '2026-09', desc: 'Groceries run', type: 'Expense', category: 'Groceries', member: 'Alice', amount: 900 },
-  { id: 3, date: '2026-10-02', month: '2026-10', desc: 'October Salary', type: 'Income', category: 'Salary', member: 'Darius', amount: 63000 },
-  { id: 4, date: '2026-10-05', month: '2026-10', desc: 'House rent', type: 'Expense', category: 'Housing', member: 'Darius', amount: 2450 }
-];
-localStorage.setItem('family_accounting_transactions', JSON.stringify(transactions));
+let transactions = [];
 
 let historicalMonths = [
   { month: 'Nov 2025', income: 58000, expense: 46000 },
@@ -355,11 +348,14 @@ let historicalMonths = [
   { month: 'Oct 2026', income: 63000, expense: 45300 }
 ];
 
-function init() {
+async function init() {
   try {
     let dateInput = document.getElementById('txDate');
     if (dateInput) dateInput.valueAsDate = new Date();
-    updateMonthSelectors();
+    
+    // Fetch live data from backend Google Sheet API
+    await fetchBackendData();
+
     updateCategoryOptions();
     renderAll();
     if (typeof lucide !== 'undefined') {
@@ -367,6 +363,23 @@ function init() {
     }
   } catch (err) {
     console.error('Init error:', err);
+  }
+}
+
+async function fetchBackendData() {
+  try {
+    let response = await fetch(API_URL);
+    let data = await response.json();
+    if (data && Array.isArray(data.transactions)) {
+      transactions = data.transactions;
+    }
+    if (data && data.budgets) {
+      categories = data.budgets;
+    }
+  } catch (e) {
+    console.log('Using local fallback due to CORS / network restriction:', e);
+    let saved = localStorage.getItem('family_accounting_transactions');
+    if (saved) transactions = JSON.parse(saved);
   }
 }
 
@@ -471,12 +484,12 @@ function renderDashboard() {
 
   let monthTransactions = transactions.filter(t => t.month === selectedMonth);
 
-  let totalIncome = monthTransactions.filter(t => t.type === 'Income').reduce((sum, t) => sum + t.amount, 0);
-  let totalExpenses = monthTransactions.filter(t => t.type === 'Expense').reduce((sum, t) => sum + t.amount, 0);
+  let totalIncome = monthTransactions.filter(t => t.type === 'Income').reduce((sum, t) => sum + Number(t.amount || 0), 0);
+  let totalExpenses = monthTransactions.filter(t => t.type === 'Expense').reduce((sum, t) => sum + Number(t.amount || 0), 0);
   let netSavings = totalIncome - totalExpenses;
   let savingsRate = totalIncome > 0 ? (netSavings / totalIncome) * 100 : 0;
   
-  let totalBudget = Object.values(categories).reduce((a, b) => a + b, 0);
+  let totalBudget = Object.values(categories).reduce((a, b) => a + Number(b), 0);
   let totalVariance = totalBudget - totalExpenses;
 
   let elInc = document.getElementById('dashTotalIncome');
@@ -496,18 +509,18 @@ function renderDashboard() {
     tbody.innerHTML = '';
     let catSpentTotals = {};
     monthTransactions.filter(t => t.type === 'Expense').forEach(t => {
-      catSpentTotals[t.category] = (catSpentTotals[t.category] || 0) + t.amount;
+      catSpentTotals[t.category] = (catSpentTotals[t.category] || 0) + Number(t.amount || 0);
     });
 
     for (let [cat, budgeted] of Object.entries(categories)) {
       let spent = catSpentTotals[cat] || 0;
-      let variance = budgeted - spent;
-      let pct = budgeted > 0 ? (spent / budgeted) * 100 : 0;
+      let variance = Number(budgeted) - spent;
+      let pct = Number(budgeted) > 0 ? (spent / Number(budgeted)) * 100 : 0;
       
       tbody.innerHTML += `
         <tr class="hover:bg-slate-50">
           <td class="p-3 font-medium text-slate-800">${cat}</td>
-          <td class="p-3 text-right text-slate-600">₱${budgeted.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+          <td class="p-3 text-right text-slate-600">₱${Number(budgeted).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
           <td class="p-3 text-right text-slate-800 font-semibold">₱${spent.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
           <td class="p-3 text-right ${variance >= 0 ? 'text-emerald-600' : 'text-rose-600'} font-medium">₱${variance.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
           <td class="p-3 text-right">
@@ -528,7 +541,7 @@ function renderDashboard() {
     memberList.innerHTML = '';
     let memberTotals = {};
     monthTransactions.filter(t => t.type === 'Expense').forEach(t => {
-      memberTotals[t.member] = (memberTotals[t.member] || 0) + t.amount;
+      memberTotals[t.member] = (memberTotals[t.member] || 0) + Number(t.amount || 0);
     });
 
     if (Object.keys(memberTotals).length === 0) {
@@ -554,7 +567,7 @@ function renderDashboard() {
     incomeList.innerHTML = '';
     let incomeTotals = {};
     monthTransactions.filter(t => t.type === 'Income').forEach(t => {
-      incomeTotals[t.category] = (incomeTotals[t.category] || 0) + t.amount;
+      incomeTotals[t.category] = (incomeTotals[t.category] || 0) + Number(t.amount || 0);
     });
 
     if (Object.keys(incomeTotals).length === 0) {
@@ -590,11 +603,11 @@ function renderMoM() {
   let txA = transactions.filter(t => t.month === monthA);
   let txB = transactions.filter(t => t.month === monthB);
 
-  let incA = txA.filter(t => t.type === 'Income').reduce((sum, t) => sum + t.amount, 0);
-  let incB = txB.filter(t => t.type === 'Income').reduce((sum, t) => sum + t.amount, 0);
+  let incA = txA.filter(t => t.type === 'Income').reduce((sum, t) => sum + Number(t.amount || 0), 0);
+  let incB = txB.filter(t => t.type === 'Income').reduce((sum, t) => sum + Number(t.amount || 0), 0);
 
-  let expA = txA.filter(t => t.type === 'Expense').reduce((sum, t) => sum + t.amount, 0);
-  let expB = txB.filter(t => t.type === 'Expense').reduce((sum, t) => sum + t.amount, 0);
+  let expA = txA.filter(t => t.type === 'Expense').reduce((sum, t) => sum + Number(t.amount || 0), 0);
+  let expB = txB.filter(t => t.type === 'Expense').reduce((sum, t) => sum + Number(t.amount || 0), 0);
 
   let savA = incA - expA;
   let savB = incB - expB;
@@ -640,7 +653,7 @@ function renderTransactionsTable() {
   if (!tbody) return;
   tbody.innerHTML = '';
   if (transactions.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-slate-400 italic">No transactions added yet. Click "Add Entry" above to record one.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-slate-400 italic">No transactions found in backend. Click "Add Entry" above to record one.</td></tr>`;
     return;
   }
   transactions.forEach(t => {
@@ -652,7 +665,7 @@ function renderTransactionsTable() {
         <td class="p-3"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${t.type === 'Income' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">${t.type}</span></td>
         <td class="p-3 text-slate-600">${t.category}</td>
         <td class="p-3 text-slate-600">${t.member}</td>
-        <td class="p-3 text-right font-bold ${t.type === 'Income' ? 'text-emerald-600' : 'text-slate-800'}">₱${t.amount.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+        <td class="p-3 text-right font-bold ${t.type === 'Income' ? 'text-emerald-600' : 'text-slate-800'}">₱${Number(t.amount || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
         <td class="p-3 text-center">
           <button type="button" onclick="deleteTransaction(${t.id})" class="text-slate-400 hover:text-rose-600 transition-colors p-1"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
         </td>
@@ -696,7 +709,7 @@ function renderBudgetPlanner() {
       container.innerHTML += `
         <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
           <label class="block font-semibold text-slate-700 mb-1">${cat}</label>
-          <p class="p-2 bg-white border border-slate-200 rounded-lg font-bold text-slate-800">₱${limit.toLocaleString('en-US', {minimumFractionDigits: 2})}</p>
+          <p class="p-2 bg-white border border-slate-200 rounded-lg font-bold text-slate-800">₱${Number(limit).toLocaleString('en-US', {minimumFractionDigits: 2})}</p>
         </div>
       `;
     }
@@ -720,9 +733,7 @@ function saveBudgets() {
     newBudgets[cat] = categories[cat];
   }
 
-  localStorage.setItem('family_accounting_budgets', JSON.stringify(categories));
-
-  fetch('https://script.google.com/macros/s/AKfycbwshuUput2ZE6gHgVIjJg-T9Rb-e1smq3fddO3Bag6plwCjTBs_rfN8BGjHlrT8KKrI_A/exec', {
+  fetch(API_URL, {
     method: 'POST',
     mode: 'no-cors',
     headers: { 'Content-Type': 'application/json' },
@@ -752,9 +763,8 @@ function renderHistory() {
   if (insightBox) {
     insightBox.innerHTML = `
       <p>• <strong>Consistent Surplus & Strong Saving:</strong> Over the past 12 months, your household maintained an average savings rate of <strong>${avgSavingsRate.toFixed(1)}%</strong>, safely surpassing your 20% annual wealth retention target.</p>
-      <p>• <strong>Peak Expenditure Season:</strong> Historical data highlights a seasonal spending surge in November/December driven by holiday festivities, successfully cushioned by bonuses and family contributions.</p>
-      <p>• <strong>Cash Flow Resilience:</strong> Dual-income contributions and auxiliary inflows provided a stable buffer against utility and grocery inflation.</p>
-      <p>• <strong>Recommendation for Next Quarter:</strong> Consider earmarking surplus quarterly cash flow into high-yield fixed instruments or emergency funds.</p>
+      <p>• <strong>Peak Expenditure Season:</strong> Historical data highlights a seasonal spending surge in November/December driven by holiday festivities.</p>
+      <p>• <strong>Cash Flow Resilience:</strong> Dual-income contributions and auxiliary inflows provided a stable buffer against inflation.</p>
     `;
   }
 }
@@ -811,18 +821,16 @@ function handleFormSubmit(event) {
     amount: amountEl ? parseFloat(amountEl.value) || 0 : 0
   };
 
-  fetch('https://script.google.com/macros/s/AKfycbwshuUput2ZE6gHgVIjJg-T9Rb-e1smq3fddO3Bag6plwCjTBs_rfN8BGjHlrT8KKrI_A/exec', {
+  fetch(API_URL, {
     method: 'POST',
     mode: 'no-cors',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(newTx)
   }).then(() => {
-    console.log('Synced transaction with Month data to Google Sheets successfully');
+    console.log('Synced transaction to Google Sheets successfully');
   }).catch(err => console.error('Sync error:', err));
 
   transactions.unshift(newTx);
-  localStorage.setItem('family_accounting_transactions', JSON.stringify(transactions));
-
   closeAddModal();
   let form = document.getElementById('transactionForm');
   if (form) form.reset();
@@ -832,15 +840,14 @@ function handleFormSubmit(event) {
 
 function deleteTransaction(id) {
   let role = getCurrentUserRole();
+  let tx = transactions.find(t => t.id === id);
   if (!role.isAdmin) {
-    let tx = transactions.find(t => t.id === id);
     if (tx && tx.member !== role.name) {
       alert('Contributors can only delete their own submitted ledger entries.');
       return;
     }
   }
   transactions = transactions.filter(t => t.id !== id);
-  localStorage.setItem('family_accounting_transactions', JSON.stringify(transactions));
   renderAll();
 }
 
