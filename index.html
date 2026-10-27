@@ -63,7 +63,7 @@ tailwind.config = {
 
   <!-- DASHBOARD VIEW -->
   <div id="view-dashboard" class="space-y-5">
-    <!-- METRICS GRID matching Google Sheet layout -->
+    <!-- METRICS GRID -->
     <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
       <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
         <p class="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Total Income</p>
@@ -98,7 +98,7 @@ tailwind.config = {
       <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
         <div class="p-4 border-b border-slate-100 flex justify-between items-center">
           <h2 class="font-bold text-slate-800 text-sm">Category Spending Breakdown</h2>
-          <span class="text-xs bg-slate-100 px-2.5 py-1 rounded-full text-slate-600 font-medium">Live Google Sheet Sync</span>
+          <span class="text-xs bg-slate-100 px-2.5 py-1 rounded-full text-slate-600 font-medium">Google Sheet Sync Active</span>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-left border-collapse text-xs">
@@ -116,7 +116,7 @@ tailwind.config = {
         </div>
       </div>
 
-      <!-- Right Column: Family Member Spending & Income Sources -->
+      <!-- Right Column -->
       <div class="space-y-5">
         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 space-y-3">
           <h2 class="font-bold text-slate-800 text-sm">Spending by Family Member</h2>
@@ -160,7 +160,7 @@ tailwind.config = {
     </div>
   </div>
 
-  <!-- BUDGET PLANNER VIEW (Admin Only) -->
+  <!-- BUDGET PLANNER VIEW -->
   <div id="view-budget" class="space-y-4 hidden">
     <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
       <div class="flex justify-between items-center">
@@ -185,7 +185,6 @@ tailwind.config = {
       </h2>
       <p class="text-xs text-slate-500">Comprehensive multi-month performance review tracking historical cash flow, peak spending periods, and financial health trends.</p>
 
-      <!-- Historical Metrics Cards -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
         <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
           <p class="text-xs text-slate-400 uppercase font-semibold">12-Month Total Inflows</p>
@@ -201,14 +200,11 @@ tailwind.config = {
         </div>
       </div>
 
-      <!-- AI Insights & Analysis Box -->
       <div class="bg-gradient-to-br from-emerald-50 to-teal-50 p-5 rounded-2xl border border-emerald-200 space-y-3">
         <h3 class="font-bold text-emerald-900 text-sm flex items-center gap-1.5">
           <i data-lucide="sparkles" class="w-4 h-4 text-emerald-600"></i> Annual Financial Insights & Recommendations
         </h3>
-        <div id="historicalInsightsContent" class="space-y-2 text-xs text-emerald-900 leading-relaxed">
-          <!-- Dynamically populated analysis -->
-        </div>
+        <div id="historicalInsightsContent" class="space-y-2 text-xs text-emerald-900 leading-relaxed"></div>
       </div>
     </div>
   </div>
@@ -290,7 +286,6 @@ let transactions = [
   { id: 5, date: '2026-10-10', desc: 'Electricity & Water Bill', type: 'Expense', category: 'Utilities', member: 'Darius', amount: 380 }
 ];
 
-// Historical 1-year monthly aggregate simulation for robust analysis
 let historicalMonths = [
   { month: 'Nov 2025', income: 58000, expense: 46000 },
   { month: 'Dec 2025', income: 65000, expense: 55000 },
@@ -358,7 +353,6 @@ function renderDashboard() {
   document.getElementById('dashSavingsRate').innerText = `${savingsRate.toFixed(1)}%`;
   document.getElementById('dashVariance').innerText = `₱${totalVariance.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
 
-  // Category Table
   let tbody = document.getElementById('categoryTableBody');
   tbody.innerHTML = '';
   let catSpentTotals = {};
@@ -389,7 +383,6 @@ function renderDashboard() {
     `;
   }
 
-  // Family Member Spending
   let memberList = document.getElementById('memberSpendingList');
   memberList.innerHTML = '';
   let memberTotals = {};
@@ -410,7 +403,6 @@ function renderDashboard() {
     `;
   }
 
-  // Income by Earner
   let incomeList = document.getElementById('incomeSourceList');
   incomeList.innerHTML = '';
   let incomeTotals = {};
@@ -553,7 +545,7 @@ function handleFormSubmit(event) {
     desc: document.getElementById('txDesc').value,
     type: document.getElementById('txType').value,
     category: document.getElementById('txCategory').value,
-    member: role.isAdmin ? document.getElementById('txMember').value : role.name, // Contributors record under their own name
+    member: role.isAdmin ? document.getElementById('txMember').value : role.name,
     amount: parseFloat(document.getElementById('txAmount').value)
   };
   transactions.unshift(newTx);
@@ -566,7 +558,6 @@ function handleFormSubmit(event) {
 function deleteTransaction(id) {
   let role = getCurrentUserRole();
   if (!role.isAdmin) {
-    // Contributors can only delete their own entries or restricted
     let tx = transactions.find(t => t.id === id);
     if (tx && tx.member !== role.name) {
       alert('Contributors can only delete their own submitted ledger entries.');
